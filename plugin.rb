@@ -22,6 +22,24 @@ enabled_site_setting :ekklesia_enabled
 # add the following line somewhere in the code to open an interactive pry session in the current frame
 #require 'pry'; binding.pry
 
+after_initialize do
+  module ::EkklesiaAuth
+    AUID = "auid".freeze
+	end
+
+	User.register_custom_field_type(::EkklesiaAuth::AUID, :uid)
+
+	class ::User
+		def auid
+			self.custom_fields[EkklesiaAuth::AUID]
+		end
+	end
+
+	add_to_serializer(:admin_user, :auid) { object.auid }
+	add_to_serializer(:admin_user_list, :auid) { object.auid }
+end
+
+
 # Discourse OAuth2 authenticator using the Ekklesia omniauth strategy.
 # Following config vars must be set:
 # * ekklesia_client_secret
@@ -64,6 +82,11 @@ class EkklesiaAuthenticator < ::Auth::Authenticator
 
     if user_id
       result.user = user = User.where(id: user_id).first
+			current_auid = user.custom_fields[EkklesiaAuth::AUID]
+			if !current_auid
+				user.custom_fields[EkklesiaAuth::AUID] = auid
+				user.save!
+			end
 
       if user
         if user.active
@@ -111,6 +134,7 @@ class EkklesiaAuthenticator < ::Auth::Authenticator
     # remove raw password in user object to avoid recalculation.
     user.instance_variable_set(:@raw_password, nil)
     change_user_trust_level(user, user_type)
+		user.custom_fields[EkklesiaAuth::AUID] = auid
     user
   end
 end
