@@ -135,6 +135,7 @@ class EkklesiaAuthenticator < ::Auth::Authenticator
     user.instance_variable_set(:@raw_password, nil)
     change_user_trust_level(user, user_type)
 		user.custom_fields[EkklesiaAuth::AUID] = auid
+		user.save!
     user
   end
 end
