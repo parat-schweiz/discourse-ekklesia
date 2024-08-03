@@ -64,6 +64,10 @@ class EkklesiaAuthenticator < ::Auth::Authenticator
     'ekklesia'
   end
 
+  def enabled?
+    true
+  end
+
   def initialize(opts = {})
     @opts = opts
   end
